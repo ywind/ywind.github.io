@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>风吟无声</title>
+  
+  
+  <link href="/atom.xml" rel="self"/>
+  
+  <link href="http://ywind.github.io/"/>
+  <updated>2018-08-25T11:57:20.997Z</updated>
+  <id>http://ywind.github.io/</id>
+  
+  <author>
+    <name>Shukang Guo</name>
+    
+  </author>
+  
+  <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>记一次JVM GC优化过程</title>
+    <link href="http://ywind.github.io/2018/08/25/jvm-gc-intern-swap/"/>
+    <id>http://ywind.github.io/2018/08/25/jvm-gc-intern-swap/</id>
+    <published>2018-08-25T09:05:46.000Z</published>
+    <updated>2018-08-25T11:57:20.997Z</updated>
+    
+    <summary type="html">
+    
+      &lt;p&gt;现有项目迁移Docker后遇到了GC问题，无论是YGC还是CMSGC，都出现了STW过长的情况，影响到了线上服务。现在将整个优化过程记录下，以做参考。图片内容可能不是当时的现场，因为服务较多而且中间也走了一些弯路导致截图乱掉了，但是情况原因是一致的。&lt;/p&gt;
+    
+    </summary>
+    
+    
+      <category term="Java" scheme="http://ywind.github.io/tags/Java/"/>
+    
+      <category term="JVM" scheme="http://ywind.github.io/tags/JVM/"/>
+    
+      <category term="GC" scheme="http://ywind.github.io/tags/GC/"/>
+    
+      <category term="TroubleShooting" scheme="http://ywind.github.io/tags/TroubleShooting/"/>
+    
+  </entry>
+  
+</feed>

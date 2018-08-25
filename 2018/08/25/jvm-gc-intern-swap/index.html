@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Java,JVM,GC,TroubleShooting," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="风吟无声" type="application/atom+xml" />
+
+
+
+
+
+
+<meta name="description" content="现有项目迁移Docker后遇到了GC问题，无论是YGC还是CMSGC，都出现了STW过长的情况，影响到了线上服务。现在将整个优化过程记录下，以做参考。图片内容可能不是当时的现场，因为服务较多而且中间也走了一些弯路导致截图乱掉了，但是情况原因是一致的。">
+<meta name="keywords" content="Java,JVM,GC,TroubleShooting">
+<meta property="og:type" content="article">
+<meta property="og:title" content="记一次JVM GC优化过程">
+<meta property="og:url" content="http://ywind.github.io/2018/08/25/jvm-gc-intern-swap/index.html">
+<meta property="og:site_name" content="风吟无声">
+<meta property="og:description" content="现有项目迁移Docker后遇到了GC问题，无论是YGC还是CMSGC，都出现了STW过长的情况，影响到了线上服务。现在将整个优化过程记录下，以做参考。图片内容可能不是当时的现场，因为服务较多而且中间也走了一些弯路导致截图乱掉了，但是情况原因是一致的。">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://webp.qiniudn.com/f1c37635d0804442a1164b99a2dea65b.png">
+<meta property="og:image" content="http://webp.qiniudn.com/34d370ee9b24419aa94d9fa9af2cfdf3.png">
+<meta property="og:image" content="http://webp.qiniudn.com/fe9274f65db14bac85c5956c5ab9a9a0.png">
+<meta property="og:image" content="http://webp.qiniudn.com/9d8e45bc1fb24c8baf9f10192b00d33d.png">
+<meta property="og:updated_time" content="2018-08-25T11:57:20.997Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="记一次JVM GC优化过程">
+<meta name="twitter:description" content="现有项目迁移Docker后遇到了GC问题，无论是YGC还是CMSGC，都出现了STW过长的情况，影响到了线上服务。现在将整个优化过程记录下，以做参考。图片内容可能不是当时的现场，因为服务较多而且中间也走了一些弯路导致截图乱掉了，但是情况原因是一致的。">
+<meta name="twitter:image" content="http://webp.qiniudn.com/f1c37635d0804442a1164b99a2dea65b.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://ywind.github.io/2018/08/25/jvm-gc-intern-swap/"/>
+
+
+
+
+
+  <title>记一次JVM GC优化过程 | 风吟无声</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">风吟无声</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-rss">
+          <a href="/atom.xml" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-rss"></i> <br />
+            
+            rss
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://ywind.github.io/2018/08/25/jvm-gc-intern-swap/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Shukang Guo">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="https://avatars1.githubusercontent.com/u/7402027?s=460&v=4">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="风吟无声">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">记一次JVM GC优化过程</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-08-25T17:05:46+08:00">
+                2018-08-25
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+             <span id="/2018/08/25/jvm-gc-intern-swap/" class="leancloud_visitors" data-flag-title="记一次JVM GC优化过程">
+               <span class="post-meta-divider">|</span>
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               
+                 <span class="post-meta-item-text">阅读次数&#58;</span>
+               
+                 <span class="leancloud-visitors-count"></span>
+             </span>
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>现有项目迁移Docker后遇到了GC问题，无论是YGC还是CMSGC，都出现了STW过长的情况，影响到了线上服务。现在将整个优化过程记录下，以做参考。图片内容可能不是当时的现场，因为服务较多而且中间也走了一些弯路导致截图乱掉了，但是情况原因是一致的。</p>
+<a id="more"></a>
+<h3 id="Docker与虚拟机不同的地方"><a href="#Docker与虚拟机不同的地方" class="headerlink" title="Docker与虚拟机不同的地方"></a>Docker与虚拟机不同的地方</h3><p>我们直观上很容易将Docker容器当成虚拟机，更好的理解应该是一种资源隔离的机制。Docker基于Linux CGroups实现了资源的限制与隔离，但容器并不是真正的虚拟机，没有完整的操作系统。</p>
+<p>如果我们在容器内执行top，ps命令就可以看到，拿到的信息是属于整个宿主机的信息。对JVM(JDK 9之前的版本)来讲，JVM并没有针对容器做优化，默认的资源只会读到宿主机的资源情况，所以我们需要用 <code>-Xms -Xmx</code> 做内存资源的限制，用<code>-XX:ParallelGCThreads</code> 做GC线程的限制。</p>
+<p>我们线上容器资源分配4C6G，JVM 参数配置 <code>-Xms5602m -Xmx5602m -Xmn1536m -XX:+UseConcMarkSweepGC -XX:CMSInitiatingOccupancyFraction=70 -XX:ParallelGCThreads=4</code> 记住这两个个配置，后面GC问题和它有关。</p>
+<h3 id="CMS-Remark阶段GC时间过长"><a href="#CMS-Remark阶段GC时间过长" class="headerlink" title="CMS Remark阶段GC时间过长"></a>CMS Remark阶段GC时间过长</h3><p>迁移后服务线上跑了一段时间之后，通过日志监控发现接口的响应时间加长了，甚至3s的超时也出现了。我查了Nginx日志，发现应该不是网络的抖动，老大怀疑是GC问题，指明了方向。于是加上 <code>-XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:/opt/logs/gc.log</code>  将日志输出到gc.log,又跑了一天后，看到如下的日志：<img src="http://webp.qiniudn.com/f1c37635d0804442a1164b99a2dea65b.png" alt="CMSGC"></p>
+<p>CMS GC remark阶段属于STW阶段，GC时间过长是会影响接口的响应的。看到这个日志之后，怀疑到了发生了Swap，后面也证实该猜测是正确的。起了个shell后台任务，通过<code>vmstat</code>命令打印了日志，又等了一天，当CMS GC过长时果然发生了内存的置换。GC时间过长时，日志截图：</p>
+<p><img src="http://webp.qiniudn.com/34d370ee9b24419aa94d9fa9af2cfdf3.png" alt="CMSGC"></p>
+<p><img src="http://webp.qiniudn.com/fe9274f65db14bac85c5956c5ab9a9a0.png" alt="vmstat"></p>
+<p>时间点完全对的上，时间正常的GC就没有这种情况，内存置换是概率发生。</p>
+<p>注意上面说了我们Docker容器的内存限制是6G，但是其实Xmx配置了5602m ，堆外的内存其实是不够的。参数不合理导致了swap的发生，那么应该配置多少合适呢？</p>
+<p>通过<code>jstack</code> 首先看了下线程数，服务的线程数达到了2000+的水平，而我们的JVM参数又没有限制栈大小（JDK8 默认栈大小1M），这就已经需要2G的内存了。另外还有一块是MetaSpace区域，通过<code>jstat</code> 跟了下GC情况，用<code>jmap histo:live</code> 触发了Full GC后，MetatSpace空间大约需要150M，Old Gen剩下的活跃数据大概200M。美团技术博客给过一个经验值的参数（<a href="https://tech.meituan.com/jvm_optimize.html" target="_blank" rel="noopener">美团-从实际案例聊聊Java应用的GC优化</a>)</p>
+<table>
+<thead>
+<tr>
+<th>空间</th>
+<th>倍数</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>总大小</td>
+<td><strong>3-4</strong> 倍活跃数据的大小</td>
+</tr>
+<tr>
+<td>新生代</td>
+<td><strong>1-1.5</strong> 活跃数据的大小</td>
+</tr>
+<tr>
+<td>老年代</td>
+<td><strong>2-3</strong> 倍活跃数据的大小</td>
+</tr>
+<tr>
+<td>永久代</td>
+<td><strong>1.2-1.5</strong> 倍Full GC后的永久代空间占用</td>
+</tr>
+</tbody>
+</table>
+<p>同时栈大小一般不需要1M，给到256K即可，通过参数<code>-Xss256k</code>控制。</p>
+<p>参考后，结合我们的情况修改后JVM参数： </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">-Xms2048m -Xmx2048m -Xmn1024m -Xss256k -XX:+UseConcMarkSweepGC -XX:+ExplicitGCInvokesConcurrentAndUnloadsClasses -XX:+UseCMSInitiatingOccupancyOnly -XX:CMSInitiatingOccupancyFraction=70 -XX:+CMSScavengeBeforeRemark -XX:MetaspaceSize=256m -XX:MaxMetaspaceSize=256m -XX:CompressedClassSpaceSize=64m</span><br></pre></td></tr></table></figure>
+<p>容器内存给到了3.5G，机器空闲资源比较多，任性一点。</p>
+<p>修改为上述JVM参数与容器参数后，没有再发生CMS GC时间过长，该问题解决。</p>
+<h3 id="YGC-时间缓慢增长至不可接受"><a href="#YGC-时间缓慢增长至不可接受" class="headerlink" title="YGC 时间缓慢增长至不可接受"></a>YGC 时间缓慢增长至不可接受</h3><p>CMS GC的问题相对来讲是比较好定位的，修改JVM参数后3s的超时基本上消失了，但是还有另外一个现象，就是我们的YGC耗时是一个缓慢增长的过程，当CMS GC或者Full GC后，耗时就会变短，重新一点一点增长直到下一个CMS GC。上面的图能看到，刚开始的YGC仅仅只要20ms左右，跑了几个小时后</p>
+<p><img src="http://webp.qiniudn.com/9d8e45bc1fb24c8baf9f10192b00d33d.png" alt="越来越长的YGC"></p>
+<p>慢慢的就达到了YGC 80ms，直到发生下一次CMS最长能到120ms。这对我们服务是不能接受的，只能继续定位。</p>
+<p>YGC的日志过于简单，不好定位。于是就在网上查找一些资料，看到 <a href="http://lovestblog.cn/blog/2016/11/06/string-intern/" target="_blank" rel="noopener">寒泉子</a> 提到String Intern过多使用的话会导致YGC耗时长。而String Table本身的回收又是在CMS GC或者Full GC阶段才会去做，那么就导致了 YGC越来越慢，在经过CMS 或Full GC后耗时恢复的情况。我在本地用demo复现了下问题，和我们的现象一致。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> java.util.UUID;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">StringTableTest</span> </span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String args[])</span> </span>&#123;</span><br><span class="line">      <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">10000000</span>; i++) &#123;</span><br><span class="line">          uuid();</span><br><span class="line">          <span class="keyword">if</span> (i&gt;=<span class="number">100000</span> &amp;&amp; i%<span class="number">100000</span>==<span class="number">0</span>)&#123;</span><br><span class="line">                System.gc();</span><br><span class="line">          &#125;</span><br><span class="line">      &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">uuid</span><span class="params">()</span> </span>&#123;</span><br><span class="line">      UUID.randomUUID().toString().intern();</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>JVM字符串常量池在JDK8 中是将字符串对象放在堆中，通过StringTable来维护引用，StringTable 结构是类HashMap的实现，如果数组长度过短（String Table (JDK8)默认长度时60013 ），那么会导致链表过长，影响查找效率，耗时过长。</p>
+<p>于是我们在线上的服务加上了<code>-XX:+PrintStringTableStatistics</code> 参数灰度升级了一台服务，该参数在JVM进程结束时会打印StringTable的统计信息。结果发现我们线上的服务竟然达到了惊人的250w+的entry，比起60013这个数字实在太夸张了。原因已经确定了。</p>
+<p>在IDE中搜索我们的代码调用，发现拼接redis key的Util类调用了intern方法以期望能够减少字符串对象的创建。把这块代码改掉，不再做intern操作。部署上线一台服务，观察后发现问题并没有完全解决，那还有哪里调用了intern方法呢？本来想用Btrace跟踪下调用关系，尝试后发现没有办法跟踪native方法，只能放弃。</p>
+<p>那有没有办法打印下Stringtable存的数据对应到字符串内容呢，通过强大的SA可以外挂到JVM进程来完成这个动作，其实我们熟用的jmap -heap也是利用了这个原理。工具代码来自<a href="https://stackoverflow.com/questions/35238902/utility-to-access-string-pool-content-in-jdk-8-hotspot-jvm" target="_blank" rel="noopener">SO</a> </p>
+<blockquote>
+<p>需要注意的是该操作会导致应用程序暂停，线上的话慎用。如果进程变T之后没有恢复的话，Linux下可以执行kill -18 $PID 发送SIGCONT信号重新激活目标进程。</p>
+</blockquote>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.sohu.example;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> sun.jvm.hotspot.memory.SystemDictionary;</span><br><span class="line"><span class="keyword">import</span> sun.jvm.hotspot.oops.InstanceKlass;</span><br><span class="line"><span class="keyword">import</span> sun.jvm.hotspot.oops.OopField;</span><br><span class="line"><span class="keyword">import</span> sun.jvm.hotspot.runtime.VM;</span><br><span class="line"><span class="keyword">import</span> sun.jvm.hotspot.tools.Tool;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">InternTool</span> <span class="keyword">extends</span> <span class="title">Tool</span> </span>&#123;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            <span class="comment">// Use Reflection-like API to reference String class and String.value field</span></span><br><span class="line">            SystemDictionary dict = VM.getVM().getSystemDictionary();</span><br><span class="line">            InstanceKlass stringKlass = (InstanceKlass) dict.find(<span class="string">"java/lang/String"</span>, <span class="keyword">null</span>, <span class="keyword">null</span>);</span><br><span class="line">            OopField valueField = (OopField) stringKlass.findField(<span class="string">"value"</span>, <span class="string">"[C"</span>);</span><br><span class="line"></span><br><span class="line">            <span class="comment">// Counters</span></span><br><span class="line">            <span class="keyword">long</span>[] stats = <span class="keyword">new</span> <span class="keyword">long</span>[<span class="number">2</span>];</span><br><span class="line"></span><br><span class="line">            <span class="comment">// Iterate through the String Pool printing out each String object</span></span><br><span class="line">            VM.getVM().getStringTable().stringsDo(s -&gt; &#123;</span><br><span class="line">                s.printValueOn(System.out);</span><br><span class="line">                System.out.println();</span><br><span class="line">                stats[<span class="number">0</span>]++;</span><br><span class="line">                stats[<span class="number">1</span>] += s.getObjectSize() + valueField.getValue(s).getObjectSize();</span><br><span class="line">            &#125;);</span><br><span class="line"></span><br><span class="line">            System.out.printf(<span class="string">"%d strings with total size %d\n"</span>, stats[<span class="number">0</span>], stats[<span class="number">1</span>]);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">            <span class="comment">// Use default SA tool launcher</span></span><br><span class="line">            <span class="keyword">new</span> InternTool().execute(args);</span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>把字符串打印后发现，基本上都是我们服务的参数或者返回值。其实上面寒泉子的文章也提到了毕玄大神遇到的一个<a href="http://hellojava.info/?p=514" target="_blank" rel="noopener">case</a> ，讲了是由于jackson本身的优化，会对json的key 做intern的操作。由于我对业务不够熟悉，刚开始没确认我们也有这种key会变的业务场景，把StringTable字符串打印出来后，跟老大确认后，确认有这种场景，那么很明确了，踏到了同一个坑了。毕玄大大的文章只讲了有接口可以关闭，并没有说怎么关。查了查Jackson的源码，可以直接方法调用来关闭key的intern操作。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">objectMapper.getFactory().disable(JsonFactory.Feature.INTERN_FIELD_NAMES);</span><br></pre></td></tr></table></figure>
+<p>由于StringTable本身存的只是引用，仅8字节，如果将StringTable扩容的话也仅仅是浪费一点内存，所以我将StringTable扩容到1000003（最好是素数）。将上述代码一起上线后，YGC耗时变得正常了，平均耗时仅10-20ms，CMS STW阶段加在一起耗时150ms。</p>
+<p>至此优化结束，最终的JVM参数</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">-Xms2048m -Xmx2048m -Xmn1024m -Xss256k -XX:+UseConcMarkSweepGC -XX:+ExplicitGCInvokesConcurrentAndUnloadsClasses -XX:+UseCMSInitiatingOccupancyOnly -XX:CMSInitiatingOccupancyFraction=70 -XX:+CMSScavengeBeforeRemark -XX:MetaspaceSize=256m -XX:MaxMetaspaceSize=256m -XX:CompressedClassSpaceSize=64m -XX:StringTableSize=1000003 -XX:ParallelGCThreads=4 -XX:+PrintFlagsFinal -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:/opt/logs/gc.log -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=10 -XX:GCLogFileSize=10M -XX:+PrintStringTableStatistics</span><br></pre></td></tr></table></figure>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><blockquote>
+<ul>
+<li>Docker 容器不是真正的虚拟机，是采用CGroups机制做的资源的隔离，需要自己指定JVM参数</li>
+<li>Docker 容器本身的资源限制要和JVM参数的限制做好配合，避免发生swap</li>
+<li>StringTable本身存的引用，可以适当扩容，慎用intern方法</li>
+</ul>
+</blockquote>
+<h3 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h3><ul>
+<li><p><a href="http://lovestblog.cn/blog/2016/11/06/string-intern/" target="_blank" rel="noopener">JVM源码分析之String.intern()导致的YGC不断变长</a></p>
+</li>
+<li><p><a href="http://hellojava.info/?p=514" target="_blank" rel="noopener">YGC越来越慢，为什么</a></p>
+</li>
+<li><p><a href="https://tech.meituan.com/jvm_optimize.html" target="_blank" rel="noopener">从实际案例聊聊Java应用的GC优化</a></p>
+</li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Java/" rel="tag"># Java</a>
+          
+            <a href="/tags/JVM/" rel="tag"># JVM</a>
+          
+            <a href="/tags/GC/" rel="tag"># GC</a>
+          
+            <a href="/tags/TroubleShooting/" rel="tag"># TroubleShooting</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="https://avatars1.githubusercontent.com/u/7402027?s=460&v=4"
+                alt="Shukang Guo" />
+            
+              <p class="site-author-name" itemprop="name">Shukang Guo</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">1</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">6</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#Docker与虚拟机不同的地方"><span class="nav-number">1.</span> <span class="nav-text">Docker与虚拟机不同的地方</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#CMS-Remark阶段GC时间过长"><span class="nav-number">2.</span> <span class="nav-text">CMS Remark阶段GC时间过长</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#YGC-时间缓慢增长至不可接受"><span class="nav-number">3.</span> <span class="nav-text">YGC 时间缓慢增长至不可接受</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#总结"><span class="nav-number">4.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#参考文献"><span class="nav-number">5.</span> <span class="nav-text">参考文献</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Shukang Guo</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Mist</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+  
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/three/three.min.js"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/three/canvas_lines.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+  <script src="https://cdn1.lncld.net/static/js/av-core-mini-0.6.4.js"></script>
+  <script>AV.initialize("6FAXp1fMO6heqYSnyUK8kDtF-gzGzoHsz", "qKueB30pIDCN48SB7Bta8Sjr");</script>
+  <script>
+    function showTime(Counter) {
+      var query = new AV.Query(Counter);
+      var entries = [];
+      var $visitors = $(".leancloud_visitors");
+
+      $visitors.each(function () {
+        entries.push( $(this).attr("id").trim() );
+      });
+
+      query.containedIn('url', entries);
+      query.find()
+        .done(function (results) {
+          var COUNT_CONTAINER_REF = '.leancloud-visitors-count';
+
+          if (results.length === 0) {
+            $visitors.find(COUNT_CONTAINER_REF).text(0);
+            return;
+          }
+
+          for (var i = 0; i < results.length; i++) {
+            var item = results[i];
+            var url = item.get('url');
+            var time = item.get('time');
+            var element = document.getElementById(url);
+
+            $(element).find(COUNT_CONTAINER_REF).text(time);
+          }
+          for(var i = 0; i < entries.length; i++) {
+            var url = entries[i];
+            var element = document.getElementById(url);
+            var countSpan = $(element).find(COUNT_CONTAINER_REF);
+            if( countSpan.text() == '') {
+              countSpan.text(0);
+            }
+          }
+        })
+        .fail(function (object, error) {
+          console.log("Error: " + error.code + " " + error.message);
+        });
+    }
+
+    function addCount(Counter) {
+      var $visitors = $(".leancloud_visitors");
+      var url = $visitors.attr('id').trim();
+      var title = $visitors.attr('data-flag-title').trim();
+      var query = new AV.Query(Counter);
+
+      query.equalTo("url", url);
+      query.find({
+        success: function(results) {
+          if (results.length > 0) {
+            var counter = results[0];
+            counter.fetchWhenSave(true);
+            counter.increment("time");
+            counter.save(null, {
+              success: function(counter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(counter.get('time'));
+              },
+              error: function(counter, error) {
+                console.log('Failed to save Visitor num, with error message: ' + error.message);
+              }
+            });
+          } else {
+            var newcounter = new Counter();
+            /* Set ACL */
+            var acl = new AV.ACL();
+            acl.setPublicReadAccess(true);
+            acl.setPublicWriteAccess(true);
+            newcounter.setACL(acl);
+            /* End Set ACL */
+            newcounter.set("title", title);
+            newcounter.set("url", url);
+            newcounter.set("time", 1);
+            newcounter.save(null, {
+              success: function(newcounter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(newcounter.get('time'));
+              },
+              error: function(newcounter, error) {
+                console.log('Failed to create');
+              }
+            });
+          }
+        },
+        error: function(error) {
+          console.log('Error:' + error.code + " " + error.message);
+        }
+      });
+    }
+
+    $(function() {
+      var Counter = AV.Object.extend("Counter");
+      if ($('.leancloud_visitors').length == 1) {
+        addCount(Counter);
+      } else if ($('.post-title-link').length > 1) {
+        showTime(Counter);
+      }
+    });
+  </script>
+
+
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
