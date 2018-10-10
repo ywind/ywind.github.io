@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="https://ywind.github.io/"/>
-  <updated>2018-08-25T11:57:20.997Z</updated>
+  <updated>2018-10-10T01:59:56.124Z</updated>
   <id>https://ywind.github.io/</id>
   
   <author>
@@ -15,6 +15,28 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>Spring Cloud Ribbon With Spring-Retry Retry Bug</title>
+    <link href="https://ywind.github.io/2018/10/01/spring-cloud-ribbon-retry-bug/"/>
+    <id>https://ywind.github.io/2018/10/01/spring-cloud-ribbon-retry-bug/</id>
+    <published>2018-10-01T11:38:48.000Z</published>
+    <updated>2018-10-10T01:59:56.124Z</updated>
+    
+    <summary type="html">
+    
+      &lt;p&gt;线上项目采用Spring Cloud作为整套的微服务体系，在微服务体系中，链路追踪是定位问题的绝佳手段。但是我们在引入Sleuth以及Zipkin的过程中发现Ribbon的重试机制发生了改变，导致Ribbon节点的重试到错误节点，引起最终请求失败。花费了几天的定位，发现是Sleuth以及Zipkin引入的Spring-Retry的组件引起的重试的bug，导致本应处于断路状态的节点的状态被错误清除。&lt;/p&gt;
+    
+    </summary>
+    
+    
+      <category term="TroubleShooting" scheme="https://ywind.github.io/tags/TroubleShooting/"/>
+    
+      <category term="Spring Cloud" scheme="https://ywind.github.io/tags/Spring-Cloud/"/>
+    
+      <category term="Spring Ribbon" scheme="https://ywind.github.io/tags/Spring-Ribbon/"/>
+    
+  </entry>
   
   <entry>
     <title>记一次JVM GC优化过程</title>
