@@ -18,8 +18,8 @@
   
   <entry>
     <title>Spring boot优雅关闭的讨论</title>
-    <link href="https://icoding.live/2018/11/11/spring-cloud-graceful-shutdown.md/"/>
-    <id>https://icoding.live/2018/11/11/spring-cloud-graceful-shutdown.md/</id>
+    <link href="https://icoding.live/2018/11/11/spring-cloud-graceful-shutdown/"/>
+    <id>https://icoding.live/2018/11/11/spring-cloud-graceful-shutdown/</id>
     <published>2018-11-11T09:15:48.000Z</published>
     <updated>2018-11-11T09:20:54.061Z</updated>
     
@@ -32,9 +32,9 @@
     
       <category term="Java" scheme="https://icoding.live/tags/Java/"/>
     
-      <category term="Spring Boot" scheme="https://icoding.live/tags/Spring-Boot/"/>
-    
       <category term="Spring Cloud" scheme="https://icoding.live/tags/Spring-Cloud/"/>
+    
+      <category term="Spring Boot" scheme="https://icoding.live/tags/Spring-Boot/"/>
     
       <category term="Optimize" scheme="https://icoding.live/tags/Optimize/"/>
     
