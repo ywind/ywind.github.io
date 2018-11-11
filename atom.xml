@@ -5,9 +5,9 @@
   
   <link href="/atom.xml" rel="self"/>
   
-  <link href="https://ywind.github.io/"/>
+  <link href="https://icoding.live/"/>
   <updated>2018-11-11T09:16:51.231Z</updated>
-  <id>https://ywind.github.io/</id>
+  <id>https://icoding.live/</id>
   
   <author>
     <name>ShukangGuo</name>
@@ -18,8 +18,8 @@
   
   <entry>
     <title>Spring boot优雅关闭的讨论</title>
-    <link href="https://ywind.github.io/2018/11/11/spring-boot-graceful-shutdown/"/>
-    <id>https://ywind.github.io/2018/11/11/spring-boot-graceful-shutdown/</id>
+    <link href="https://icoding.live/2018/11/11/spring-cloud-graceful-shutdown.md/"/>
+    <id>https://icoding.live/2018/11/11/spring-cloud-graceful-shutdown.md/</id>
     <published>2018-11-11T09:15:48.000Z</published>
     <updated>2018-11-11T09:16:51.231Z</updated>
     
@@ -30,20 +30,20 @@
     </summary>
     
     
-      <category term="Java" scheme="https://ywind.github.io/tags/Java/"/>
+      <category term="Java" scheme="https://icoding.live/tags/Java/"/>
     
-      <category term="Spring Boot" scheme="https://ywind.github.io/tags/Spring-Boot/"/>
+      <category term="Spring Boot" scheme="https://icoding.live/tags/Spring-Boot/"/>
     
-      <category term="Spring Cloud" scheme="https://ywind.github.io/tags/Spring-Cloud/"/>
+      <category term="Spring Cloud" scheme="https://icoding.live/tags/Spring-Cloud/"/>
     
-      <category term="Optimize" scheme="https://ywind.github.io/tags/Optimize/"/>
+      <category term="Optimize" scheme="https://icoding.live/tags/Optimize/"/>
     
   </entry>
   
   <entry>
     <title>Spring Cloud Ribbon With Spring-Retry Retry Bug</title>
-    <link href="https://ywind.github.io/2018/10/01/spring-cloud-ribbon-retry-bug/"/>
-    <id>https://ywind.github.io/2018/10/01/spring-cloud-ribbon-retry-bug/</id>
+    <link href="https://icoding.live/2018/10/01/spring-cloud-ribbon-retry-bug/"/>
+    <id>https://icoding.live/2018/10/01/spring-cloud-ribbon-retry-bug/</id>
     <published>2018-10-01T11:38:48.000Z</published>
     <updated>2018-10-10T01:59:56.124Z</updated>
     
@@ -54,18 +54,18 @@
     </summary>
     
     
-      <category term="TroubleShooting" scheme="https://ywind.github.io/tags/TroubleShooting/"/>
+      <category term="Spring Cloud" scheme="https://icoding.live/tags/Spring-Cloud/"/>
     
-      <category term="Spring Cloud" scheme="https://ywind.github.io/tags/Spring-Cloud/"/>
+      <category term="TroubleShooting" scheme="https://icoding.live/tags/TroubleShooting/"/>
     
-      <category term="Spring Ribbon" scheme="https://ywind.github.io/tags/Spring-Ribbon/"/>
+      <category term="Spring Ribbon" scheme="https://icoding.live/tags/Spring-Ribbon/"/>
     
   </entry>
   
   <entry>
     <title>记一次JVM GC优化过程</title>
-    <link href="https://ywind.github.io/2018/08/25/jvm-gc-intern-swap/"/>
-    <id>https://ywind.github.io/2018/08/25/jvm-gc-intern-swap/</id>
+    <link href="https://icoding.live/2018/08/25/jvm-gc-intern-swap/"/>
+    <id>https://icoding.live/2018/08/25/jvm-gc-intern-swap/</id>
     <published>2018-08-25T09:05:46.000Z</published>
     <updated>2018-11-11T07:54:05.555Z</updated>
     
@@ -76,13 +76,13 @@
     </summary>
     
     
-      <category term="Java" scheme="https://ywind.github.io/tags/Java/"/>
+      <category term="Java" scheme="https://icoding.live/tags/Java/"/>
     
-      <category term="JVM" scheme="https://ywind.github.io/tags/JVM/"/>
+      <category term="JVM" scheme="https://icoding.live/tags/JVM/"/>
     
-      <category term="GC" scheme="https://ywind.github.io/tags/GC/"/>
+      <category term="GC" scheme="https://icoding.live/tags/GC/"/>
     
-      <category term="TroubleShooting" scheme="https://ywind.github.io/tags/TroubleShooting/"/>
+      <category term="TroubleShooting" scheme="https://icoding.live/tags/TroubleShooting/"/>
     
   </entry>
   
