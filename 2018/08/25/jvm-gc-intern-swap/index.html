@@ -89,15 +89,15 @@
 <meta property="og:site_name" content="风吟无声">
 <meta property="og:description" content="现有项目迁移Docker后遇到了GC问题，无论是YGC还是CMSGC，都出现了STW过长的情况，影响到了线上服务。现在将整个优化过程记录下，以做参考。图片内容可能不是当时的现场，因为服务较多而且中间也走了一些弯路导致截图乱掉了，但是情况原因是一致的。">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:image" content="https://www.superbed.cn/pic/5b812a2e9dc6d61d97f069e4">
-<meta property="og:image" content="https://www.superbed.cn/pic/5b812dbb9dc6d61d97f069e7">
-<meta property="og:image" content="https://www.superbed.cn/pic/5b812d059dc6d61d97f069e6">
-<meta property="og:image" content="https://www.superbed.cn/pic/5b8131e79dc6d61d97f069e9">
-<meta property="og:updated_time" content="2018-11-11T07:54:05.555Z">
+<meta property="og:image" content="https://0d077ef9e74d8.cdn.sohucs.com/r1JhuJn_png">
+<meta property="og:image" content="https://0d077ef9e74d8.cdn.sohucs.com/r1Jlj84_png">
+<meta property="og:image" content="https://0d077ef9e74d8.cdn.sohucs.com/r1JkxWU_png">
+<meta property="og:image" content="https://0d077ef9e74d8.cdn.sohucs.com/r1JpN2M_png">
+<meta property="og:updated_time" content="2018-11-12T02:19:11.058Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="记一次JVM GC优化过程">
 <meta name="twitter:description" content="现有项目迁移Docker后遇到了GC问题，无论是YGC还是CMSGC，都出现了STW过长的情况，影响到了线上服务。现在将整个优化过程记录下，以做参考。图片内容可能不是当时的现场，因为服务较多而且中间也走了一些弯路导致截图乱掉了，但是情况原因是一致的。">
-<meta name="twitter:image" content="https://www.superbed.cn/pic/5b812a2e9dc6d61d97f069e4">
+<meta name="twitter:image" content="https://0d077ef9e74d8.cdn.sohucs.com/r1JhuJn_png">
 
 
 
@@ -353,10 +353,10 @@
 <h3 id="Docker与虚拟机不同的地方"><a href="#Docker与虚拟机不同的地方" class="headerlink" title="Docker与虚拟机不同的地方"></a>Docker与虚拟机不同的地方</h3><p>我们直观上很容易将Docker容器当成虚拟机，更好的理解应该是一种资源隔离的机制。Docker基于Linux CGroups实现了资源的限制与隔离，但容器并不是真正的虚拟机，没有完整的操作系统。</p>
 <p>如果我们在容器内执行top，ps命令就可以看到，拿到的信息是属于整个宿主机的信息。对JVM(JDK 9之前的版本)来讲，JVM并没有针对容器做优化，默认的资源只会读到宿主机的资源情况，所以我们需要用 <code>-Xms -Xmx</code> 做内存资源的限制，用<code>-XX:ParallelGCThreads</code> 做GC线程的限制。</p>
 <p>我们线上容器资源分配4C6G，JVM 参数配置 <code>-Xms5602m -Xmx5602m -Xmn1536m -XX:+UseConcMarkSweepGC -XX:CMSInitiatingOccupancyFraction=70 -XX:ParallelGCThreads=4</code> 记住这两个个配置，后面GC问题和它有关。</p>
-<h3 id="CMS-Remark阶段GC时间过长"><a href="#CMS-Remark阶段GC时间过长" class="headerlink" title="CMS Remark阶段GC时间过长"></a>CMS Remark阶段GC时间过长</h3><p>迁移后服务线上跑了一段时间之后，通过日志监控发现接口的响应时间加长了，甚至3s的超时也出现了。我查了Nginx日志，发现应该不是网络的抖动，老大怀疑是GC问题，指明了方向。于是加上 <code>-XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:/opt/logs/gc.log</code>  将日志输出到gc.log,又跑了一天后，看到如下的日志：<img src="https://www.superbed.cn/pic/5b812a2e9dc6d61d97f069e4" alt="CMS"></p>
+<h3 id="CMS-Remark阶段GC时间过长"><a href="#CMS-Remark阶段GC时间过长" class="headerlink" title="CMS Remark阶段GC时间过长"></a>CMS Remark阶段GC时间过长</h3><p>迁移后服务线上跑了一段时间之后，通过日志监控发现接口的响应时间加长了，甚至3s的超时也出现了。我查了Nginx日志，发现应该不是网络的抖动，老大怀疑是GC问题，指明了方向。于是加上 <code>-XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:/opt/logs/gc.log</code>  将日志输出到gc.log,又跑了一天后，看到如下的日志：<img src="https://0d077ef9e74d8.cdn.sohucs.com/r1JhuJn_png" alt="CMS"></p>
 <p>CMS GC remark阶段属于STW阶段，GC时间过长是会影响接口的响应的。看到这个日志之后，怀疑到了发生了Swap，后面也证实该猜测是正确的。起了个shell后台任务，通过<code>vmstat</code>命令打印了日志，又等了一天，当CMS GC过长时果然发生了内存的置换。GC时间过长时，日志截图：</p>
-<p><img src="https://www.superbed.cn/pic/5b812dbb9dc6d61d97f069e7" alt="CMSGC"></p>
-<p><img src="https://www.superbed.cn/pic/5b812d059dc6d61d97f069e6" alt="vmstat"></p>
+<p><img src="https://0d077ef9e74d8.cdn.sohucs.com/r1Jlj84_png" alt="CMSGC"></p>
+<p><img src="https://0d077ef9e74d8.cdn.sohucs.com/r1JkxWU_png" alt="vmstat"></p>
 <p>时间点完全对的上，时间正常的GC就没有这种情况，内存置换是概率发生。</p>
 <p>注意上面说了我们Docker容器的内存限制是6G，但是其实Xmx配置了5602m ，堆外的内存其实是不够的。参数不合理导致了swap的发生，那么应该配置多少合适呢？</p>
 <p>通过<code>jstack</code> 首先看了下线程数，服务的线程数达到了2000+的水平，而我们的JVM参数又没有限制栈大小（JDK8 默认栈大小1M），这就已经需要2G的内存了。另外还有一块是MetaSpace区域，通过<code>jstat</code> 跟了下GC情况，用<code>jmap histo:live</code> 触发了Full GC后，MetatSpace空间大约需要150M，Old Gen剩下的活跃数据大概200M。美团技术博客给过一个经验值的参数（<a href="https://tech.meituan.com/jvm_optimize.html" target="_blank" rel="noopener">美团-从实际案例聊聊Java应用的GC优化</a>)</p>
@@ -392,7 +392,7 @@
 <p>容器内存给到了3.5G，机器空闲资源比较多，任性一点。</p>
 <p>修改为上述JVM参数与容器参数后，没有再发生CMS GC时间过长，该问题解决。</p>
 <h3 id="YGC-时间缓慢增长至不可接受"><a href="#YGC-时间缓慢增长至不可接受" class="headerlink" title="YGC 时间缓慢增长至不可接受"></a>YGC 时间缓慢增长至不可接受</h3><p>CMS GC的问题相对来讲是比较好定位的，修改JVM参数后3s的超时基本上消失了，但是还有另外一个现象，就是我们的YGC耗时是一个缓慢增长的过程，当CMS GC或者Full GC后，耗时就会变短，重新一点一点增长直到下一个CMS GC。上面的图能看到，刚开始的YGC仅仅只要20ms左右，跑了几个小时后</p>
-<p><img src="https://www.superbed.cn/pic/5b8131e79dc6d61d97f069e9" alt="越来越长的YGC"></p>
+<p><img src="https://0d077ef9e74d8.cdn.sohucs.com/r1JpN2M_png" alt="越来越长的YGC"></p>
 <p>慢慢的就达到了YGC 80ms，直到发生下一次CMS最长能到120ms。这对我们服务是不能接受的，只能继续定位。</p>
 <p>YGC的日志过于简单，不好定位。于是就在网上查找一些资料，看到 <a href="http://lovestblog.cn/blog/2016/11/06/string-intern/" target="_blank" rel="noopener">寒泉子</a> 提到String Intern过多使用的话会导致YGC耗时长。而String Table本身的回收又是在CMS GC或者Full GC阶段才会去做，那么就导致了 YGC越来越慢，在经过CMS 或Full GC后耗时恢复的情况。我在本地用demo复现了下问题，和我们的现象一致。</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> java.util.UUID;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">StringTableTest</span> </span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String args[])</span> </span>&#123;</span><br><span class="line">      <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">10000000</span>; i++) &#123;</span><br><span class="line">          uuid();</span><br><span class="line">          <span class="keyword">if</span> (i&gt;=<span class="number">100000</span> &amp;&amp; i%<span class="number">100000</span>==<span class="number">0</span>)&#123;</span><br><span class="line">                System.gc();</span><br><span class="line">          &#125;</span><br><span class="line">      &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">uuid</span><span class="params">()</span> </span>&#123;</span><br><span class="line">      UUID.randomUUID().toString().intern();</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
