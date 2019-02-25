@@ -30,11 +30,11 @@
     </summary>
     
     
+      <category term="Spring Cloud" scheme="https://icoding.live/tags/Spring-Cloud/"/>
+    
       <category term="Java" scheme="https://icoding.live/tags/Java/"/>
     
       <category term="Spring Boot" scheme="https://icoding.live/tags/Spring-Boot/"/>
-    
-      <category term="Spring Cloud" scheme="https://icoding.live/tags/Spring-Cloud/"/>
     
       <category term="Optimize" scheme="https://icoding.live/tags/Optimize/"/>
     
@@ -54,11 +54,11 @@
     </summary>
     
     
-      <category term="TroubleShooting" scheme="https://icoding.live/tags/TroubleShooting/"/>
-    
       <category term="Spring Cloud" scheme="https://icoding.live/tags/Spring-Cloud/"/>
     
       <category term="Spring Ribbon" scheme="https://icoding.live/tags/Spring-Ribbon/"/>
+    
+      <category term="TroubleShooting" scheme="https://icoding.live/tags/TroubleShooting/"/>
     
   </entry>
   
@@ -76,13 +76,13 @@
     </summary>
     
     
+      <category term="TroubleShooting" scheme="https://icoding.live/tags/TroubleShooting/"/>
+    
       <category term="Java" scheme="https://icoding.live/tags/Java/"/>
     
       <category term="JVM" scheme="https://icoding.live/tags/JVM/"/>
     
       <category term="GC" scheme="https://icoding.live/tags/GC/"/>
-    
-      <category term="TroubleShooting" scheme="https://icoding.live/tags/TroubleShooting/"/>
     
   </entry>
   
