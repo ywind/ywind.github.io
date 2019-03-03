@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="https://icoding.live/"/>
-  <updated>2019-02-25T13:27:17.318Z</updated>
+  <updated>2019-03-03T10:05:18.261Z</updated>
   <id>https://icoding.live/</id>
   
   <author>
@@ -21,11 +21,11 @@
     <link href="https://icoding.live/2019/02/25/fescar-interpretation-spring-cloud/"/>
     <id>https://icoding.live/2019/02/25/fescar-interpretation-spring-cloud/</id>
     <published>2019-02-25T11:05:46.000Z</published>
-    <updated>2019-02-25T13:27:17.318Z</updated>
+    <updated>2019-03-03T10:05:18.261Z</updated>
     
     <summary type="html">
     
-      &lt;p&gt;最近一直在了解学习分布式事务相关的内容，恰好阿里开源了GTS的开源实现 &lt;a href=&quot;https://github.com/alibaba/fescar/&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;&gt;Fescar&lt;/a&gt; 。阿里的背书是Java届非常认可的，所以项目本身短短时间便收到了将近6k的star ⭐。抱着学习的心态对它的原理进行了解，因为我们现在的微服务框架采用的是Spring Cloud，所以也分析下Fescar 整合Spring Cloud部分的源码机制。 &lt;/p&gt;
+      &lt;p&gt;最近一直在了解学习分布式事务相关的内容，恰好阿里开源了GTS的开源实现 &lt;a href=&quot;https://github.com/alibaba/fescar/&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;&gt;Fescar&lt;/a&gt; 。阿里的背书是Java届非常认可的，所以项目本身短短时间便收到了将近6k的star ⭐。抱着学习的心态对它的原理进行了解，同时因为我们现在的微服务框架采用的是Spring Cloud，所以也分析下Fescar 整合Spring Cloud部分的源码机制。 &lt;/p&gt;
     
     </summary>
     
