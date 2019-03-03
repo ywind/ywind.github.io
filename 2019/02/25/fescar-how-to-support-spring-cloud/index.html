@@ -81,19 +81,19 @@
 
 
 
-<meta name="description" content="最近一直在了解学习分布式事务相关的内容，恰好阿里开源了GTS的开源实现 Fescar 。阿里的背书是Java届非常认可的，所以项目本身短短时间便收到了将近6k的star ⭐。抱着学习的心态对它的原理进行了解，同时因为我们现在的微服务框架采用的是Spring Cloud，所以也分析下Fescar 整合Spring Cloud部分的源码机制。">
+<meta name="description" content="最近一直比较关注分布式事务相关的内容，恰好阿里开源了GTS的开源实现 Fescar 。阿里的背书是Java届非常认可的，所以项目本身短短时间便收到了将近6k的star ⭐。抱着学习的心态对它的原理进行了解，同时因为现在的微服务框架Spring Cloud大行其道，所以分析下Fescar 整合Spring Cloud部分的源码机制。">
 <meta name="keywords" content="Java,Spring Cloud,Distributed Transaction,Fescar">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Fescar在SpringCloud中事务传播源码分析">
-<meta property="og:url" content="https://icoding.live/2019/02/25/fescar-interpretation-spring-cloud/index.html">
+<meta property="og:url" content="https://icoding.live/2019/02/25/fescar-how-to-support-spring-cloud/index.html">
 <meta property="og:site_name" content="风吟无声">
-<meta property="og:description" content="最近一直在了解学习分布式事务相关的内容，恰好阿里开源了GTS的开源实现 Fescar 。阿里的背书是Java届非常认可的，所以项目本身短短时间便收到了将近6k的star ⭐。抱着学习的心态对它的原理进行了解，同时因为我们现在的微服务框架采用的是Spring Cloud，所以也分析下Fescar 整合Spring Cloud部分的源码机制。">
+<meta property="og:description" content="最近一直比较关注分布式事务相关的内容，恰好阿里开源了GTS的开源实现 Fescar 。阿里的背书是Java届非常认可的，所以项目本身短短时间便收到了将近6k的star ⭐。抱着学习的心态对它的原理进行了解，同时因为现在的微服务框架Spring Cloud大行其道，所以分析下Fescar 整合Spring Cloud部分的源码机制。">
 <meta property="og:locale" content="zh-Hans">
 <meta property="og:image" content="https://camo.githubusercontent.com/6a31d57b4496e83af1a0bd76ede83657de2d9d34/68747470733a2f2f75706c6f61642d696d616765732e6a69616e7368752e696f2f75706c6f61645f696d616765732f343432303736372d343934613534643430326232643335342e706e673f696d6167654d6f6772322f6175746f2d6f7269656e742f7374726970253743696d61676556696577322f322f772f31323430">
-<meta property="og:updated_time" content="2019-03-03T10:08:46.343Z">
+<meta property="og:updated_time" content="2019-03-03T10:22:47.636Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Fescar在SpringCloud中事务传播源码分析">
-<meta name="twitter:description" content="最近一直在了解学习分布式事务相关的内容，恰好阿里开源了GTS的开源实现 Fescar 。阿里的背书是Java届非常认可的，所以项目本身短短时间便收到了将近6k的star ⭐。抱着学习的心态对它的原理进行了解，同时因为我们现在的微服务框架采用的是Spring Cloud，所以也分析下Fescar 整合Spring Cloud部分的源码机制。">
+<meta name="twitter:description" content="最近一直比较关注分布式事务相关的内容，恰好阿里开源了GTS的开源实现 Fescar 。阿里的背书是Java届非常认可的，所以项目本身短短时间便收到了将近6k的star ⭐。抱着学习的心态对它的原理进行了解，同时因为现在的微服务框架Spring Cloud大行其道，所以分析下Fescar 整合Spring Cloud部分的源码机制。">
 <meta name="twitter:image" content="https://camo.githubusercontent.com/6a31d57b4496e83af1a0bd76ede83657de2d9d34/68747470733a2f2f75706c6f61642d696d616765732e6a69616e7368752e696f2f75706c6f61645f696d616765732f343432303736372d343934613534643430326232643335342e706e673f696d6167654d6f6772322f6175746f2d6f7269656e742f7374726970253743696d61676556696577322f322f772f31323430">
 
 
@@ -124,7 +124,7 @@
 
 
 
-  <link rel="canonical" href="https://icoding.live/2019/02/25/fescar-interpretation-spring-cloud/"/>
+  <link rel="canonical" href="https://icoding.live/2019/02/25/fescar-how-to-support-spring-cloud/"/>
 
 
 
@@ -267,7 +267,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://icoding.live/2019/02/25/fescar-interpretation-spring-cloud/">
+    <link itemprop="mainEntityOfPage" href="https://icoding.live/2019/02/25/fescar-how-to-support-spring-cloud/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="ShukangGuo">
@@ -314,7 +314,7 @@
 
           
           
-             <span id="/2019/02/25/fescar-interpretation-spring-cloud/" class="leancloud_visitors" data-flag-title="Fescar在SpringCloud中事务传播源码分析">
+             <span id="/2019/02/25/fescar-how-to-support-spring-cloud/" class="leancloud_visitors" data-flag-title="Fescar在SpringCloud中事务传播源码分析">
                <span class="post-meta-divider">|</span>
                <span class="post-meta-item-icon">
                  <i class="fa fa-eye"></i>
@@ -345,7 +345,7 @@
       
 
       
-        <p>最近一直在了解学习分布式事务相关的内容，恰好阿里开源了GTS的开源实现 <a href="https://github.com/alibaba/fescar/" target="_blank" rel="noopener">Fescar</a> 。阿里的背书是Java届非常认可的，所以项目本身短短时间便收到了将近6k的star ⭐。抱着学习的心态对它的原理进行了解，同时因为我们现在的微服务框架采用的是Spring Cloud，所以也分析下Fescar 整合Spring Cloud部分的源码机制。 </p>
+        <p>最近一直比较关注分布式事务相关的内容，恰好阿里开源了GTS的开源实现 <a href="https://github.com/alibaba/fescar/" target="_blank" rel="noopener">Fescar</a> 。阿里的背书是Java届非常认可的，所以项目本身短短时间便收到了将近6k的star ⭐。抱着学习的心态对它的原理进行了解，同时因为现在的微服务框架Spring Cloud大行其道，所以分析下Fescar 整合Spring Cloud部分的源码机制。 </p>
 <a id="more"></a>
 <h3 id="Fescar简要介绍"><a href="#Fescar简要介绍" class="headerlink" title="Fescar简要介绍"></a>Fescar简要介绍</h3><p>常见的分布式事务方式有基于2PC的XA (e.g. atomikos)，从业务层入手的TCC( e.g. byteTCC)、事务消息( e.g. RocketMQ Half Message)等等。XA是需要本地数据库支持的分布式事务的协议，资源锁在数据库层面导致性能较差，而支付宝作为布道师引入的TCC模式需要大量的业务代码保证，开发维护成本较高。</p>
 <p>分布式事务是业界比较关注的领域，这也是短短时间Fescar能收获6k Star的原因之一。Fescar 名字取自 <strong>Fast &amp; EaSy Commit And Rollback</strong> ，简单来说Fescar通过对本地RDBMS分支事务的协调来完成全局事务的推进，是工作应用层的中间件。优点明显，相对于XA模式是性能较好，相对于TCC等方式开发成本较低。</p>
