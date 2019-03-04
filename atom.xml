@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="https://icoding.live/"/>
-  <updated>2019-03-03T10:22:47.636Z</updated>
+  <updated>2019-03-04T13:10:08.564Z</updated>
   <id>https://icoding.live/</id>
   
   <author>
@@ -21,7 +21,7 @@
     <link href="https://icoding.live/2019/02/25/fescar-how-to-support-spring-cloud/"/>
     <id>https://icoding.live/2019/02/25/fescar-how-to-support-spring-cloud/</id>
     <published>2019-02-25T11:05:46.000Z</published>
-    <updated>2019-03-03T10:22:47.636Z</updated>
+    <updated>2019-03-04T13:10:08.564Z</updated>
     
     <summary type="html">
     
@@ -56,9 +56,9 @@
     
       <category term="Java" scheme="https://icoding.live/tags/Java/"/>
     
-      <category term="Spring Boot" scheme="https://icoding.live/tags/Spring-Boot/"/>
-    
       <category term="Spring Cloud" scheme="https://icoding.live/tags/Spring-Cloud/"/>
+    
+      <category term="Spring Boot" scheme="https://icoding.live/tags/Spring-Boot/"/>
     
       <category term="Optimize" scheme="https://icoding.live/tags/Optimize/"/>
     
@@ -78,11 +78,11 @@
     </summary>
     
     
-      <category term="TroubleShooting" scheme="https://icoding.live/tags/TroubleShooting/"/>
-    
       <category term="Spring Cloud" scheme="https://icoding.live/tags/Spring-Cloud/"/>
     
       <category term="Spring Ribbon" scheme="https://icoding.live/tags/Spring-Ribbon/"/>
+    
+      <category term="TroubleShooting" scheme="https://icoding.live/tags/TroubleShooting/"/>
     
   </entry>
   
@@ -102,11 +102,11 @@
     
       <category term="Java" scheme="https://icoding.live/tags/Java/"/>
     
+      <category term="TroubleShooting" scheme="https://icoding.live/tags/TroubleShooting/"/>
+    
       <category term="JVM" scheme="https://icoding.live/tags/JVM/"/>
     
       <category term="GC" scheme="https://icoding.live/tags/GC/"/>
-    
-      <category term="TroubleShooting" scheme="https://icoding.live/tags/TroubleShooting/"/>
     
   </entry>
   
