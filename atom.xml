@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="https://icoding.live/"/>
-  <updated>2019-03-04T13:10:08.564Z</updated>
+  <updated>2018-11-12T02:15:59.593Z</updated>
   <id>https://icoding.live/</id>
   
   <author>
@@ -15,30 +15,6 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
-  
-  <entry>
-    <title>Fescar在SpringCloud中事务传播源码分析</title>
-    <link href="https://icoding.live/2019/02/25/fescar-how-to-support-spring-cloud/"/>
-    <id>https://icoding.live/2019/02/25/fescar-how-to-support-spring-cloud/</id>
-    <published>2019-02-25T11:05:46.000Z</published>
-    <updated>2019-03-04T13:10:08.564Z</updated>
-    
-    <summary type="html">
-    
-      &lt;p&gt;最近一直比较关注分布式事务相关的内容，恰好阿里开源了GTS的开源实现 &lt;a href=&quot;https://github.com/alibaba/fescar/&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;&gt;Fescar&lt;/a&gt; 。阿里的背书是Java届非常认可的，所以项目本身短短时间便收到了将近6k的star ⭐。抱着学习的心态对它的原理进行了解，同时因为现在的微服务框架Spring Cloud大行其道，所以分析下Fescar 整合Spring Cloud部分的源码机制。 &lt;/p&gt;
-    
-    </summary>
-    
-    
-      <category term="Java" scheme="https://icoding.live/tags/Java/"/>
-    
-      <category term="Spring Cloud" scheme="https://icoding.live/tags/Spring-Cloud/"/>
-    
-      <category term="Distributed Transaction" scheme="https://icoding.live/tags/Distributed-Transaction/"/>
-    
-      <category term="Fescar" scheme="https://icoding.live/tags/Fescar/"/>
-    
-  </entry>
   
   <entry>
     <title>Spring cloud优雅关闭的讨论</title>
@@ -56,9 +32,9 @@
     
       <category term="Java" scheme="https://icoding.live/tags/Java/"/>
     
-      <category term="Spring Cloud" scheme="https://icoding.live/tags/Spring-Cloud/"/>
-    
       <category term="Spring Boot" scheme="https://icoding.live/tags/Spring-Boot/"/>
+    
+      <category term="Spring Cloud" scheme="https://icoding.live/tags/Spring-Cloud/"/>
     
       <category term="Optimize" scheme="https://icoding.live/tags/Optimize/"/>
     
@@ -80,9 +56,9 @@
     
       <category term="Spring Cloud" scheme="https://icoding.live/tags/Spring-Cloud/"/>
     
-      <category term="Spring Ribbon" scheme="https://icoding.live/tags/Spring-Ribbon/"/>
-    
       <category term="TroubleShooting" scheme="https://icoding.live/tags/TroubleShooting/"/>
+    
+      <category term="Spring Ribbon" scheme="https://icoding.live/tags/Spring-Ribbon/"/>
     
   </entry>
   
@@ -102,11 +78,11 @@
     
       <category term="Java" scheme="https://icoding.live/tags/Java/"/>
     
-      <category term="TroubleShooting" scheme="https://icoding.live/tags/TroubleShooting/"/>
-    
       <category term="JVM" scheme="https://icoding.live/tags/JVM/"/>
     
       <category term="GC" scheme="https://icoding.live/tags/GC/"/>
+    
+      <category term="TroubleShooting" scheme="https://icoding.live/tags/TroubleShooting/"/>
     
   </entry>
   
